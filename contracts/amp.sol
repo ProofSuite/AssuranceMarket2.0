@@ -48,7 +48,7 @@ contract AMP{
 
     }
 
-    function getHistoricYield(address tokenAddress) public view returns (uint256 percentage){
+    function getHistoricYield(address tokenAddress, uint256 years) public view returns (uint256 percentage){
 
     }
 
@@ -64,7 +64,7 @@ contract AMP{
 
     }
 
-    function getPredictionBalance(address predictorAddress) public view returns (uint256 currentBalance){
+    function getPredictionBalance(address predictorAddress, address tokenAddress) public view returns (uint256 currentBalance, uint256 side){
 
 
     }
@@ -99,6 +99,7 @@ contract AMP{
 
     }
 
+
     function inactivateAsset(address tokenAddress, string memory reasonGivenByAdminOrCreator ) public {
 
     }
@@ -112,6 +113,13 @@ contract AMP{
     }
 
     function claimAssetSaleRewards(address tokenAddress) public returns(uint256 amountReturned){
+
+    }
+
+    function contributeAssetRegularRewards(address tokenAddress, uint256 amountUSD) public returns(bool){
+
+    }
+    function contributeAssetSaleRewards(address tokenAddress, uint256 amountUSD) public returns(bool){
 
     }
 
