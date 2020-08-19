@@ -182,8 +182,7 @@ contract AMP {
 
 
     function isAssetOnAMP(address tokenAddress)  public view returns (bool isOn){
-         // placeholder for now
-        
+        // placeholder for now
         (isOn) = true;
     }
 
@@ -202,7 +201,7 @@ contract AMP {
     function swapAsset( address fromAsset, address toAsset, uint256 amountInput, uint256 minimumOutput) external returns(uint256 outputAmount){
         
         require(ERC20(fromAsset).transferFrom(msg.sender, address(this), amountInput), 'transferFrom failed.');
-        require(DAI.approve(address(uniswap), amountInput), 'approve failed.');
+        require(ERC20(fromAsset).approve(address(uniswap), amountInput), 'approve failed.');
         
         // get the asset swap price via orfeed
         uint256 swapPrice = getSwapPrice(fromAsset, toAsset, amountInput, "UNISWAPBYSYMBOLV2");
@@ -218,7 +217,7 @@ contract AMP {
 
     function predictForOrAgainst(address tokenAddress, bool predictFor, uint256 amountStableCoinStaked) payable external returns(bool) {
         
-        require(msg.value > 0, "Please send the ETH to be used for swapping");
+        require(msg.value > 0, "Please send some ETH that'll be used for the prediction");
 
         uint256 swapPrice = orfeed.getExchangeRate("ETH", "DAI", "UNISWAPBYSYMBOLV2", amountStableCoinStaked);
         predictions[tokenAddress].push(Prediction(msg.sender, predictFor, amountStableCoinStaked));
