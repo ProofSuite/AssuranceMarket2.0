@@ -24,6 +24,15 @@ All notices regarding the AMP market include notices of restrictions for the par
 pragma experimental ABIEncoderV2;
 pragma solidity 0.6.6;
 
+// SafeMath
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
+// ERC20
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// Uniswap
+import '@uniswap/v2-periphery/contracts/UniswapV2Router02.sol';
+
 
 interface OrFeedInterface {
   function getExchangeRate ( string calldata fromSymbol, string calldata  toSymbol, string calldata venue, uint256 amount ) external view returns ( uint256 );
@@ -31,16 +40,24 @@ interface OrFeedInterface {
   function getTokenAddress ( string calldata  symbol ) external view returns ( address );
   function getSynthBytes32 ( string calldata  symbol ) external view returns ( bytes32 );
   function getForexAddress ( string calldata symbol ) external view returns ( address );
+  function requestAsyncEvent(string calldata eventName, string calldata source)  external view returns(string memory); 
   function arb(address  fundsReturnToAddress,  address liquidityProviderContractAddress, string[] calldata   tokens,  uint256 amount, string[] calldata  exchanges) external payable returns (bool);
 }
 
 
-contract AMP{
+contract AMP {
+    
 
     using SafeMath for uint256;
   
     // orfeed interface
     OrFeedInterface orfeed;
+    
+    // dai tokenAddress
+    ERC20 daiToken;
+    
+    // the uniswap v2 router
+    UniswapV2Router02 uniswap;
     
     // the owner of the contract
     address owner;
@@ -58,20 +75,49 @@ contract AMP{
         string photo1URL;
         string photo2URL;
         string photo3URL;
-        bool assetActive;
-        string inActiveStatusReason;
     }
     
+    
+    // Represents a single prediction
+    struct Prediction {
+        address userAddress;
+        bool predictFor;
+        uint256 amountStableCoinStaked;
+    }
+    
+    
+     // Represents a token issuer i.e. the person who adds the asset to the assurance market
+    struct TokenIssuer {
+        address issuerAddress;
+        uint256 dateIssued; // date the token was added to the market
+    }
     
     // a mapping of assets in the contract
-    mapping (bytes32 => Asset) assets;
+    mapping (address => Asset) assets;
+    
+     // a mapping of assets in the contract
+    mapping (address => TokenIssuer) tokenIssuers;
+    
+    // a mapping of predictions for each asset
+    mapping (address => Prediction[]) predictions;
+    
+    // a mapping of each tokens resolution date
+    mapping (address => uint256) assetResolutionDate;
     
 
-    constructor() public {
+    constructor(address _daiTokenAddress, address _uniswapAddress) public {
+        
+        // set the owner of the contract
         owner = msg.sender;
+        
+        // init the dai token address
+        daiToken = ERC20(_daiTokenAddress);
+        
+        //init the uniswap router
+        uniswap = UniswapV2Router02(_uniswapAddress);        
     }
     
-    
+    // check that the user is the owner of the contract
     modifier onlyOwner() {
         if (msg.sender != owner) {
             revert();
@@ -79,151 +125,166 @@ contract AMP{
         _;
     }
     
-    function setOrfeedAddress(address orfeedAddress) onlyOwner external {
-        orfeed = OrFeedInterface(orfeedAddress);
+    // contract events
+    event AssetAdded(address _tokenAddress, uint256 _resolutionDate);
+    event AssetInactivated(address _tokenAddress, string _reasonGivenByAdminOrCreator);
+     
+    
+    /// @notice allow the owner to set the address of the orfeed contract
+    /// @param _orfeedAddress the new address of the orfeed contract
+    /// @return true
+    function setOrfeedAddress(address _orfeedAddress) onlyOwner external returns(bool) {
+        orfeed = OrFeedInterface(_orfeedAddress);
+        return true;
     }
-    
-    
 
     function getCreditScore(address entityAddress) public view returns (uint256 score){
-
+        (score) = 200;
+    }
+    
+    // I changed the return type to string because of the complexity of string to unit256 parsing in solidity, was getting alot of underflows here
+    function getPrice(address tokenAddress, uint256 amount, string memory venue) public view returns (string memory price){
+        string memory tokenSymbol = ERC20(tokenAddress).symbol();
+        string memory priceQuery = string(abi.encodePacked("https://min-api.cryptocompare.com/data/price?fsym=", tokenSymbol, "&tsyms=USD"));
+        (price) = orfeed.requestAsyncEvent(priceQuery, "CHAINLINK");
     }
 
-    function getPrice(address tokenAddress, uint256 amount, uint256 side, string memory venue) public view returns (uint256 price){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+    function getSwapPrice(address fromTokenAddress, address toTokenAddress, uint256 amount, string memory venue) public view returns (uint256 price) {
+        string memory fromTokenSymbol = ERC20(fromTokenAddress).symbol();
+        string memory toTokenSymbol = ERC20(toTokenAddress).symbol();
+        (price) = orfeed.getExchangeRate(fromTokenSymbol, toTokenSymbol, venue, amount);
     }
-
-    function getSwapPrice(address fromTokenAddress, address toTokenAddress, uint256 amount, uint256 side, string memory venue) public view returns (uint256 price){
-
-    }
-
 
     function getProposedYield(address tokenAddress) public view returns (uint256 percentage){
-      bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+        (percentage) = 200;
     }
 
-    function getHistoricYield(address tokenAddress, uint256 years) public view returns (uint256 percentage){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+    function getHistoricYield(address tokenAddress, uint256 numOfYears) public view returns (uint256 percentage){
+        (percentage) = 200;
     }
 
-    function getProposedMarketCap(address tokenAddress) public view returns (uint256 marketCap){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-        return assets[assetId].proposedMarketCapUSD;
-
+    function getProposedMarketCap(address tokenAddress) external view returns (uint256 marketCap){
+        (marketCap) = assets[tokenAddress].proposedMarketCapUSD;
     }
 
-    function getAssetPredictionScoreAndSize(address tokenAddress)  public view returns (uint256 score, uint256 totalPredictionMarketSize){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+    function getAssetPredictionScoreAndSize(address tokenAddress)  external view returns (uint256 score, uint256 totalPredictionMarketSize){
+        (score, totalPredictionMarketSize) = (200, 200);
     }
 
-    function getPredictionMarketAssetExpirationDate() public view returns (uint256 timestamp){
-
+    function getPredictionMarketAssetExpirationDate(address tokenAddress) external view returns (uint256 timestamp) {
+        (timestamp) = assetResolutionDate[tokenAddress];
     }
 
     function getPredictionBalance(address predictorAddress, address tokenAddress) public view returns (uint256 currentBalance, uint256 side){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
-
+         // placeholder for now
+        (currentBalance, side) = (200, 200);
     }
 
 
     function isAssetOnAMP(address tokenAddress)  public view returns (bool isOn){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+         // placeholder for now
+        
+        (isOn) = true;
     }
 
     function isPredictionMarketResolved(address tokenAddress)  public view returns (bool isOn){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
+         // placeholder for now
+        (isOn) = true;
 
     }
 
 
     function rateEntityForCreditScore(address entityAddress, uint256 proposedScore) public returns(bool){
-
+         // placeholder for now
+        return true;
     }
 
-    function swapAsset(address toAsset, address fromAsset, uint256 amountInput, int256 minimumOutput) public returns(uint256 outputAmount){
-
+    function swapAsset( address fromAsset, address toAsset, uint256 amountInput, uint256 minimumOutput) external returns(uint256 outputAmount){
+        
+        require(ERC20(fromAsset).transferFrom(msg.sender, address(this), amountInput), 'transferFrom failed.');
+        require(DAI.approve(address(uniswap), amountInput), 'approve failed.');
+        
+        // get the asset swap price via orfeed
+        uint256 swapPrice = getSwapPrice(fromAsset, toAsset, amountInput, "UNISWAPBYSYMBOLV2");
+        
+        address[] memory path = new address[](2);
+        path[0] = fromAsset;
+        path[1] = toAsset;
+        
+        // do the swap via uniswap v2
+        uniswap.swapExactTokensForTokens(amountInput, minimumOutput, path, msg.sender, block.timestamp);
+        (outputAmount) = swapPrice;
     }
 
-    function predictForOrAgainst(address tokenAddress, bool predictFor, uint256 amountStableCoinStaked) public returns(bool){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
+    function predictForOrAgainst(address tokenAddress, bool predictFor, uint256 amountStableCoinStaked) payable external returns(bool) {
+        
+        require(msg.value > 0, "Please send the ETH to be used for swapping");
 
+        uint256 swapPrice = orfeed.getExchangeRate("ETH", "DAI", "UNISWAPBYSYMBOLV2", amountStableCoinStaked);
+        predictions[tokenAddress].push(Prediction(msg.sender, predictFor, amountStableCoinStaked));
+        
+        return true;
     }
 
     function resolvePredictionMarketAsset(address tokenAddress)  public returns(bool resolved){
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+    
+        (resolved) = true;
     }
     
 
     function addAssetToMarket(address tokenAddress, string memory title, string memory description, string memory entityName, uint256 proposedMarketCapUSD, string memory fileHash1, string memory fileHash2, string memory photo1URL, string memory photo2URL, string memory photo3URL ) public {
-        bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-        assets[assetId] = Asset(tokenAddress, title, description, entityName, proposedMarketCapUSD, fileHash1, fileHash2, photo1URL, photo2URL, photo3URL, true, "");
+        // add the asset
+        assets[tokenAddress] = Asset(tokenAddress, title, description, entityName, proposedMarketCapUSD, fileHash1, fileHash2, photo1URL, photo2URL, photo3URL);
+        
+        // set the token issuer
+        tokenIssuers[tokenAddress] = TokenIssuer(msg.sender, now);
+        
+        // calculate and set  its resolution date
+        uint256 resolutionDate = now + 365 days;
+        assetResolutionDate[tokenAddress] = resolutionDate;
+        
+        // then emit the appropriate event
+        emit AssetAdded(tokenAddress, resolutionDate);
     }
-
 
     function inactivateAsset(address tokenAddress, string memory reasonGivenByAdminOrCreator ) public {
-       bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-       assets[assetId].assetActive = false;
-       assets[assetId].inActiveStatusReason = reasonGivenByAdminOrCreator;
+       // remove the asset from the assets mapping
+       delete assets[tokenAddress];
+       
+       // remove the issuer of the token
+       delete tokenIssuers[tokenAddress];
+       
+       // delete its resolution date
+       delete assetResolutionDate[tokenAddress];
+       
+       // then emit an event explaining why the asset was inactivated
+       emit AssetInactivated(tokenAddress, reasonGivenByAdminOrCreator);
     }
 
-    function claimPredictionRewards(address tokenAddress) public returns(uint256 amountReturned){
-       bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+    function claimPredictionRewards(address tokenAddress) public returns(uint256 amountReturned) {
+        
+        // placeholder for now
+        (amountReturned) = 200;
     }
 
-    function claimAssetRewards(address tokenAddress) public returns(uint256 amountReturned){
-       bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+    function claimAssetRewards(address tokenAddress) public returns(uint256 amountReturned) {
+         // placeholder for now
+        (amountReturned) = 200;
     }
 
     function claimAssetSaleRewards(address tokenAddress) public returns(uint256 amountReturned){
-       bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+         // placeholder for now
+        (amountReturned) = 200;
     }
 
     function contributeAssetRegularRewards(address tokenAddress, uint256 amountUSD) public returns(bool){
-       bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
+         // placeholder for now
+        return true;
     }
-    function contributeAssetSaleRewards(address tokenAddress, uint256 amountUSD) public returns(bool){
-       bytes32 assetId =  keccak256(abi.encodePacked(tokenAddress));
-
-    }
-
-}
-
-
-
-library SafeMath {
-    function mul(uint256 a, uint256 b) internal view returns(uint256) {
-        uint256 c = a * b;
-        assert(a == 0 || c / a == b);
-        return c;
-    }
-
-    function div(uint256 a, uint256 b) internal view returns(uint256) {
-        assert(b > 0); // Solidity automatically throws when dividing by 0
-        uint256 c = a / b;
-        assert(a == b * c + a % b); // There is no case in which this doesn't hold
-        return c;
-    }
-
-    function sub(uint256 a, uint256 b) internal view returns(uint256) {
-        assert(b <= a);
-        return a - b;
-    }
-
-    function add(uint256 a, uint256 b) internal view returns(uint256) {
-        uint256 c = a + b;
-        assert(c >= a);
-        return c;
-    }
-}
     
+    function contributeAssetSaleRewards(address tokenAddress, uint256 amountUSD) public returns(bool){
+         // placeholder for now
+        return true;
+    }
+
+}
