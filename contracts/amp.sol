@@ -61,6 +61,9 @@ contract AMP {
     
     // the owner of the contract
     address owner;
+
+    // the address of the uniswap v2 router to use
+    address uniswapAddress;
     
     // Represents a single asset
     struct Asset {
@@ -114,6 +117,7 @@ contract AMP {
         daiToken = ERC20(_daiTokenAddress);
         
         //init the uniswap router
+        uniswapAddress = _uniswapAddress;
         uniswap = UniswapV2Router02(_uniswapAddress);        
     }
     
@@ -139,6 +143,7 @@ contract AMP {
     }
 
     function getCreditScore(address entityAddress) public view returns (uint256 score){
+        // placeholder for now
         (score) = 200;
     }
     
@@ -156,22 +161,27 @@ contract AMP {
     }
 
     function getProposedYield(address tokenAddress) public view returns (uint256 percentage){
+        // placeholder for now
         (percentage) = 200;
     }
 
     function getHistoricYield(address tokenAddress, uint256 numOfYears) public view returns (uint256 percentage){
+        // placeholder for now
         (percentage) = 200;
     }
 
     function getProposedMarketCap(address tokenAddress) external view returns (uint256 marketCap){
+        // placeholder for now
         (marketCap) = assets[tokenAddress].proposedMarketCapUSD;
     }
 
     function getAssetPredictionScoreAndSize(address tokenAddress)  external view returns (uint256 score, uint256 totalPredictionMarketSize){
+        // placeholder for now
         (score, totalPredictionMarketSize) = (200, 200);
     }
 
     function getPredictionMarketAssetExpirationDate(address tokenAddress) external view returns (uint256 timestamp) {
+          // placeholder for now
         (timestamp) = assetResolutionDate[tokenAddress];
     }
 
@@ -201,7 +211,7 @@ contract AMP {
     function swapAsset( address fromAsset, address toAsset, uint256 amountInput, uint256 minimumOutput) external returns(uint256 outputAmount){
         
         require(ERC20(fromAsset).transferFrom(msg.sender, address(this), amountInput), 'transferFrom failed.');
-        require(ERC20(fromAsset).approve(address(uniswap), amountInput), 'approve failed.');
+        require(ERC20(fromAsset).approve(address(uniswapAddress), amountInput), 'approve failed.');
         
         // get the asset swap price via orfeed
         uint256 swapPrice = getSwapPrice(fromAsset, toAsset, amountInput, "UNISWAPBYSYMBOLV2");
@@ -225,8 +235,8 @@ contract AMP {
         return true;
     }
 
-    function resolvePredictionMarketAsset(address tokenAddress)  public returns(bool resolved){
-    
+    function resolvePredictionMarketAsset(address tokenAddress)  public returns(bool resolved) {
+       // placeholder for now
         (resolved) = true;
     }
     
