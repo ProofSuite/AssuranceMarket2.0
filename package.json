@@ -1,0 +1,28 @@
+{
+  "name": "assurancemarket2.0",
+  "version": "1.0.0",
+  "description": "Prediction and Token Swap Market for Real-World Assets",
+  "main": "truffle.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ProofSuite/AssuranceMarket2.0.git"
+  },
+  "keywords": [
+    "Assurance"
+  ],
+  "author": "Mulili Nzuki",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/ProofSuite/AssuranceMarket2.0/issues"
+  },
+  "homepage": "https://github.com/ProofSuite/AssuranceMarket2.0#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.1.0",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
+    "solidity-util": "willitscale/solidity-util"
+  }
+}
