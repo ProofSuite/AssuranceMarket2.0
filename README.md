@@ -2,9 +2,18 @@
 
 Prediction and Token Swap Market for Real-World Assets
 
+# Testing
+
+To test the contract and verify its functionality, please do the following
+
+1. Make sure you have [node.js](https://nodejs.org/en/) and [yarn](https://classic.yarnpkg.com/en/docs/getting-started) installed in your system.
+2. Then install [truffle](https://www.trufflesuite.com/docs/truffle/getting-started/installation) globally in your system via the command `yarn global add truffle`.
+3. Navigate to the root of this project and install the required node dependencies through the command `yarn install`
+4. Replace the `mnemonic` variable in `truffle-config.js` with your own 12 words or more phrase, if necessary.
+4. Replace the `infuraKey` variable in `truffle-config.js` with your own infura key.
+5. Finally, fund the ethereum account associated with the above `mnemonic` phrase with some test `rinkeby ETH` and then run the command `truffle test --network rinkeby` to compile & deploy the contract to rinkeby and also run the tests to verify its functonality.
 
 # Core Functionality
-
 
 ## getCreditScore
 
