@@ -117,7 +117,7 @@ interface IAMP {
     /*
     * @dev Removes assey from the market.
     */
-    function inactivateAsset(address tokenAddress, string memory reasonGivenByAdminOrCreator ) public
+    function deactivateAsset(address tokenAddress, string memory reasonGivenByAdminOrCreator ) public
 
     /*
     * @dev Can be called by a prediction market prediction holder to retrieve their resolution reward based on results of a prediction market after resolution.
@@ -146,6 +146,6 @@ interface IAMP {
 
     // contract events
     event AssetAdded(address _tokenAddress, uint256 _resolutionDate);
-    event AssetInactivated(address _tokenAddress, string _reasonGivenByAdminOrCreator);
+    event AssetDeactivated(address _tokenAddress, string _reasonGivenByAdminOrCreator);
 
 }

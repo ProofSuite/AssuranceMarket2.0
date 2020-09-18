@@ -22,7 +22,7 @@ Returns the credit score of an Ethereum address. The credit score is an aggregat
 
 ## getPrice
 
-Given a token address and venue, this function leverages orfeed to query a token price. Optionally a user can specify the venue of AMP which specifies assets that are native to AMP. This can be called for, for example, DAI, but usually this would be used for properties or othr kinds of Assets. Returns price in USD. The OrFeed contract address can be updated by the owner of this contract, which is ideally operated by a DAO
+Given a token address and venue, this function leverages orfeed to query a token price. Optionally a user can specify the venue of AMP which specifies assets that are native to AMP. This can be called for, for example, DAI, but usually this would be used for properties or other kinds of Assets. Returns price in USD. The OrFeed contract address can be updated by the owner of this contract, which is ideally operated by a DAO
 
 ## getSwapPrice
 
@@ -36,7 +36,7 @@ This function returns the annual yeild percentage (100 for 1 percent, 10 for .1%
 
 ## getHistoricYield
 
-Returns the average yield based on the number of years specified. The historic yeild is determined based on the rewards sent by the issuer via AMP
+Returns the average yield based on the number of years specified. The historic yield is determined based on the rewards sent by the issuer via AMP
 
 
 ## getProposedMarketCap
@@ -93,7 +93,7 @@ Can be called by issuer or the owner DAO at any time. Can be called by any user 
 Given a token address, an asset is added to the assurance market
 
 
-## inactivateAsset
+## deactivateAsset
 
 Can be called by DAO owner contract if a fraudulent user has uploaded a token address that they are not the issuer of. Removes it from the market, so that a the real issuer can later upload it.
 
