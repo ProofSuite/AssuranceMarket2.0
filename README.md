@@ -84,7 +84,7 @@ Can be called by issuer or the owner DAO at any time. Can be called by any user 
 Given a token address, an asset is added to the assurance market
 
 
-## inactivateAsset
+## deactivateAsset
 
 Can be called by DAO owner contract if a fraudulent user has uploaded a token address that they are not the issuer of. Removes it from the market, so that a the real issuer can later upload it.
 

@@ -131,7 +131,7 @@ contract AMP {
     
     // contract events
     event AssetAdded(address _tokenAddress, uint256 _resolutionDate);
-    event AssetInactivated(address _tokenAddress, string _reasonGivenByAdminOrCreator);
+    event AssetDeactivated(address _tokenAddress, string _reasonGivenByAdminOrCreator);
      
     
     /// @notice allow the owner to set the address of the orfeed contract
@@ -256,7 +256,7 @@ contract AMP {
         emit AssetAdded(tokenAddress, resolutionDate);
     }
 
-    function inactivateAsset(address tokenAddress, string memory reasonGivenByAdminOrCreator ) public {
+    function deactivateAsset(address tokenAddress, string memory reasonGivenByAdminOrCreator ) public {
        // remove the asset from the assets mapping
        delete assets[tokenAddress];
        
@@ -266,8 +266,8 @@ contract AMP {
        // delete its resolution date
        delete assetResolutionDate[tokenAddress];
        
-       // then emit an event explaining why the asset was inactivated
-       emit AssetInactivated(tokenAddress, reasonGivenByAdminOrCreator);
+       // then emit an event explaining why the asset was deactivated
+       emit AssetDeactivated(tokenAddress, reasonGivenByAdminOrCreator);
     }
 
     function claimPredictionRewards(address tokenAddress) public returns(uint256 amountReturned) {
