@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/ProofSuite/AssuranceMarket2.0#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^3.1.0",
-    "@truffle/hdwallet-provider": "^1.0.42",
+    "@openzeppelin/contracts": "^3.2.0",
+    "@truffle/hdwallet-provider": "^1.1.0",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "solidity-util": "willitscale/solidity-util"
