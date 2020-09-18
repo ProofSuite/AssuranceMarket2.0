@@ -19,7 +19,8 @@
     "url": "https://github.com/ProofSuite/AssuranceMarket2.0/issues"
   },
   "homepage": "https://github.com/ProofSuite/AssuranceMarket2.0#readme",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "@openzeppelin/contracts": "^3.2.0",
     "@truffle/hdwallet-provider": "^1.1.0",
     "@uniswap/v2-core": "^1.0.1",

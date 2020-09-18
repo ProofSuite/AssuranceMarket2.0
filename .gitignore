@@ -1,6 +1,6 @@
 # Non Applicable Includes-Exclusions
 yarn.lock
-package.lock
+package-lock.json
 
 # Logs
 logs
